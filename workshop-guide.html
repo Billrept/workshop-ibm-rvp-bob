@@ -1,0 +1,789 @@
+<!doctype html><html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>IBM Bob Workshop — Smart IT Helpdesk Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f4f4f4; --tile:#ffffff; --border:#e0e0e0; --border2:#c6c6c6; --shell:#161616;
+  --text:#161616; --text2:#525252; --text3:#6f6f6f;
+  --blue:#0f62fe; --blue-hov:#0353e9;
+  --ok:#24a148; --ok-bg:#defbe6; --info:#0043ce; --info-bg:#edf5ff;
+  --warn-bg:#fcf4d6; --warn:#f1c21b; --err:#da1e28; --err-bg:#fff1f1;
+  --tg-gray:#e0e0e0; --tg-blue-bg:#d0e2ff; --tg-blue:#0043ce;
+  --tg-purp-bg:#e8daff; --tg-purp:#6929c4; --tg-teal-bg:#d9fbfb; --tg-teal:#005d5d;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 "IBM Plex Sans","IBM Plex Sans Thai",system-ui,sans-serif}
+code,kbd{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;font-size:.92em;background:#f4f4f4;padding:1px 6px;border:1px solid var(--border)}
+a{color:var(--blue);text-decoration:none}
+
+
+/* ===== Carbon UI shell header ===== */
+.shell{position:sticky;top:0;z-index:50;height:48px;background:var(--shell);color:#fff;display:flex;align-items:center;padding:0 20px;gap:12px}
+.shell b{font-weight:600}
+.shell .sep{color:#525252}
+.shell .grow{flex:1}
+.shell .pill{font-size:12px;color:#c6c6c6;border:1px solid #393939;padding:2px 10px;display:inline-flex;gap:6px;align-items:center}
+
+
+/* ===== layout ===== */
+.page{display:flex;max-width:1280px;margin:0 auto}
+.snav{width:248px;flex:none;position:sticky;top:48px;height:calc(100vh - 48px);overflow:auto;background:var(--tile);border-right:1px solid var(--border);padding:16px 0}
+.snav .cap{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);padding:8px 20px 6px}
+.snav a.nl{display:flex;gap:10px;align-items:center;padding:10px 20px;color:var(--text2);border-left:3px solid transparent;font-size:13px}
+.snav a.nl:hover{background:#f4f4f4;color:var(--text)}
+.snav a.nl.act{border-left-color:var(--blue);color:var(--text);background:#edf5ff;font-weight:600}
+.snav a.nl .n{width:20px;height:20px;flex:none;border:1.5px solid var(--border2);border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:600}
+.snav a.nl.act .n{border-color:var(--blue);background:var(--blue);color:#fff}
+.legend{padding:8px 20px;display:flex;flex-direction:column;gap:6px}
+main{flex:1;min-width:0;padding:0 32px 64px}
+
+
+/* ===== journey stepper ===== */
+.journey{background:var(--tile);border-bottom:1px solid var(--border);overflow-x:auto}
+.journey .in{display:flex;min-width:720px;max-width:1280px;margin:0 auto;padding:14px 32px}
+.jstep{position:relative;flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;color:var(--text2)}
+.jstep .dot{width:24px;height:24px;border-radius:50%;border:2px solid var(--border2);background:#fff;display:grid;place-items:center;font-size:11px;font-weight:600;color:var(--text2);z-index:1}
+.jstep small{font-size:11px;color:var(--text3)}
+.jstep .lb{font-size:12px;font-weight:600;color:var(--text)}
+.jstep:not(:last-child)::after{content:"";position:absolute;top:12px;left:calc(50% + 16px);width:calc(100% - 32px);height:2px;background:var(--border)}
+.jstep.hot .dot{border-color:var(--blue);background:var(--blue);color:#fff}
+
+
+/* ===== hero ===== */
+.hero{padding:40px 0 24px;border-bottom:1px solid var(--border)}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--blue);font-weight:600}
+h1{font-size:32px;line-height:1.2;margin:8px 0 10px;font-weight:600;letter-spacing:-.01em}
+.hero p.sub{font-size:15px;color:var(--text2);max-width:720px;margin:0}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);background:var(--tile);border:1px solid var(--border);border-top:3px solid var(--blue);margin-top:24px}
+.stat{padding:18px 20px 16px}
+.stat+.stat{border-left:1px solid var(--border)}
+.stat .v{font-size:30px;font-weight:300;line-height:1.1;letter-spacing:-.01em}
+.stat .k{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text2);margin-top:6px}
+
+
+/* ===== generic tiles / sections ===== */
+.blk{margin-top:32px}
+h2.sec{font-size:20px;font-weight:600;margin:0 0 4px}
+.sub2{color:var(--text2);font-size:13px;margin:0 0 16px}
+.cards3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.cards4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+@media(max-width:1000px){.cards3,.cards4{grid-template-columns:1fr 1fr}}
+@media(max-width:640px){.cards3,.cards4{grid-template-columns:1fr}.stats{grid-template-columns:1fr}.stat+.stat{border-left:0;border-top:1px solid var(--border)}}
+.mcard{background:var(--tile);border:1px solid var(--border);border-top:3px solid var(--blue);padding:16px}
+.mcard.purp{border-top-color:#8a3ffc}.mcard.teal{border-top-color:#009d9a}
+.mcard h4{margin:0 0 4px;font-size:15px}
+.mcard p{margin:6px 0 0;font-size:13px;color:var(--text2)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{font-size:12px;background:#f4f4f4;border:1px solid var(--border);padding:2px 8px;font-family:"IBM Plex Mono",monospace}
+
+
+/* tags */
+.tag{display:inline-block;font-size:12px;font-weight:500;padding:2px 10px;border-radius:2px;white-space:nowrap}
+.tag.gray{background:var(--tg-gray);color:#161616}
+.tag.blue{background:var(--tg-blue-bg);color:var(--tg-blue)}
+.tag.purp{background:var(--tg-purp-bg);color:var(--tg-purp)}
+.tag.teal{background:var(--tg-teal-bg);color:var(--tg-teal)}
+
+
+/* notes = Carbon inline notifications */
+.note{display:flex;gap:10px;padding:10px 14px;font-size:13px;border-left:3px solid;margin:10px 0;align-items:flex-start}
+.note svg{flex:none;margin-top:1px}
+.note b{font-weight:600}
+.note.ok{background:var(--ok-bg);border-color:var(--ok)}
+.note.info{background:var(--info-bg);border-color:var(--info)}
+.note.warn{background:var(--warn-bg);border-color:var(--warn)}
+.note.err{background:var(--err-bg);border-color:var(--err)}
+
+
+/* ===== steps ===== */
+.phase{margin-top:40px}
+.phase-head{background:var(--tile);border:1px solid var(--border);padding:20px 24px}
+.phase-meta{display:flex;gap:10px;align-items:center;font-size:12px;margin-bottom:6px}
+.kicker{font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--blue)}
+.time{color:var(--text3);display:inline-flex;gap:5px;align-items:center}
+.phase-head h3{font-size:20px;margin:0 0 4px}
+.phase-head .ps{margin:0 0 12px;color:var(--text2);font-size:13px}
+.step{display:flex;gap:16px;margin-top:16px}
+.rail{display:flex;flex-direction:column;align-items:center}
+.num{width:32px;height:32px;flex:none;background:#161616;color:#fff;display:grid;place-items:center;font-weight:600;font-size:14px}
+.rail .ln{flex:1;width:2px;background:var(--border2);margin-top:4px}
+.step:last-child .rail .ln{display:none}
+.sbody{flex:1;min-width:0;background:var(--tile);border:1px solid var(--border);padding:16px 20px 20px}
+.shead{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:4px}
+.shead h4{margin:0;font-size:15px;font-weight:600;flex:1;min-width:200px}
+
+
+/* prompt card = Carbon code snippet */
+.pcard{border:1px solid var(--border);margin-top:10px}
+.pbar{display:flex;justify-content:flex-end;align-items:center;background:#f4f4f4;border-bottom:1px solid var(--border);padding:2px 8px}
+.cbtn{border:1px solid transparent;background:transparent;color:var(--blue);font:600 12px "IBM Plex Sans",sans-serif;padding:3px 10px;cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.cbtn:hover{background:#e8e8e8}
+pre.prompt{display:none;margin:0;padding:14px 16px;white-space:pre-wrap;word-break:break-word;font:13px/1.65 "IBM Plex Sans",sans-serif;color:#161616;background:#fff}
+pre.prompt.show{display:block}
+pre.code{margin:0;padding:14px 16px;white-space:pre-wrap;word-break:break-word;font:12.5px/1.6 "IBM Plex Mono",ui-monospace,monospace;background:#fff;max-height:340px;overflow:auto}
+.checkline{font-size:13px;margin-top:10px;color:var(--text2)}
+.checkline b{color:var(--text)}
+
+
+/* setup files */
+.file-tile{background:var(--tile);border:1px solid var(--border)}
+.file-tile .fh{display:flex;justify-content:space-between;align-items:center;background:#f4f4f4;border-bottom:1px solid var(--border);padding:8px 8px 8px 14px}
+.file-tile .fh code{background:none;border:0;padding:0;font-weight:600;font-size:13px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:900px){.grid2{grid-template-columns:1fr}}
+
+
+/* accordion */
+details.acc{background:var(--tile);border:1px solid var(--border);margin-top:12px}
+details.acc summary{cursor:pointer;list-style:none;display:flex;gap:10px;align-items:center;padding:14px 16px;font-weight:600;font-size:14px}
+details.acc summary::-webkit-details-marker{display:none}
+details.acc summary .chev{transition:transform .15s}
+details.acc[open] summary .chev{transform:rotate(90deg)}
+details.acc .accbody{border-top:1px solid var(--border)}
+
+
+ul.tips{margin:0;padding-left:18px;font-size:13px;line-height:1.7;color:var(--text)}
+ul.tips li{margin-bottom:8px}
+
+
+footer{margin-top:48px;padding:24px 0;border-top:1px solid var(--border);color:var(--text3);font-size:12px}
+
+
+@media(max-width:1100px){.snav{display:none}main{padding:0 20px 64px}}
+</style>
+</head>
+<body>
+
+
+<!-- ===== Shell ===== -->
+<header class="shell">
+  <b>IBM Bob</b><span class="sep">|</span>
+  <span>Smart IT Helpdesk Portal — Workshop Guide</span>
+  <span class="grow"></span>
+</header>
+
+
+<!-- ===== Journey stepper ===== -->
+<div class="journey"><div class="in">
+  <a class="jstep" href="#setup"><span class="dot">0</span><span class="lb">Pre-flight</span><small>trainer</small></a>
+  <a class="jstep" href="#ph1"><span class="dot">1</span><span class="lb">Security</span><small>default mode</small></a>
+  <a class="jstep" href="#ph2"><span class="dot">2</span><span class="lb">Plan</span><small>default mode</small></a>
+  <a class="jstep" href="#ph3"><span class="dot">3</span><span class="lb">Build</span><small>frontend</small></a>
+  <a class="jstep" href="#ph4"><span class="dot">4</span><span class="lb">QA</span><small>default mode</small></a>
+  <a class="jstep" href="#ph5"><span class="dot">5</span><span class="lb">Release</span><small>default mode</small></a>
+</div></div>
+
+
+<div class="page">
+
+
+<!-- ===== Side nav ===== -->
+<nav class="snav">
+  <div class="cap">Workshop flow</div>
+  <a class="nl" href="#setup"><span class="n">0</span>Pre-flight files</a>
+  <a class="nl" href="#ph1"><span class="n">1</span>Security &amp; Setup</a>
+  <a class="nl" href="#ph2"><span class="n">2</span>Planning &amp; Architecture</a>
+  <a class="nl" href="#ph3"><span class="n">3</span>Full-Stack Build</a>
+  <a class="nl" href="#ph4"><span class="n">4</span>QA &amp; Verify</a>
+  <a class="nl" href="#ph5"><span class="n">5</span>CI/CD &amp; Release</a>
+  <a class="nl" href="#tips"><span class="n">★</span>Trainer tips</a>
+  <div class="cap" style="margin-top:16px">Bob's modes</div>
+  <div class="legend">
+    <span class="tag gray">Default Agent Mode</span>
+    <span class="tag purp">React Frontend Specialist</span>
+  </div>
+</nav>
+
+
+<main>
+
+
+<!-- ===== Hero ===== -->
+<div class="hero">
+  <div class="eyebrow">Hands-on workshop · IBM Bob</div>
+  <h1>Build a Smart IT Helpdesk Portal<br>with your AI dev squad.</h1>
+  <p class="sub">You give Bob copy-paste prompts. Bob plans, draws, codes, tests, and ships — using 2 modes and 5 MCP tools. You go from an empty folder to a full-stack app with CI/CD on GitHub.</p>
+  <div class="stats">
+    <div class="stat"><div class="v">2</div><div class="k">Bob modes</div></div>
+    <div class="stat"><div class="v">5</div><div class="k">MCP servers</div></div>
+    <div class="stat"><div class="v">1</div><div class="k">GitHub repo shipped</div></div>
+  </div>
+</div>
+
+
+<!-- ===== How Bob works ===== -->
+<div class="blk">
+  <h2 class="sec">How IBM Bob works in this workshop</h2>
+  <p class="sub2">Bob is not one assistant — it is a squad. You switch the <b>mode</b>, and Bob becomes a different specialist with its own role and tools (MCP servers).</p>
+  <div class="grid2">
+    <div class="mcard">
+      <span class="tag gray">Default Agent Mode</span>
+      <h4>Plans, verifies &amp; ships</h4>
+      <p>Reads requirements, writes API contracts, draws state diagrams, designs SQLite, runs E2E tests with Puppeteer, and manages GitHub releases.</p>
+      <div class="chips"><span class="chip">drawio</span><span class="chip">puppeteer</span><span class="chip">sqlite3 CLI</span><span class="chip">github</span></div>
+    </div>
+    <div class="mcard purp">
+      <span class="tag purp">React Frontend Specialist</span>
+      <h4>Builds the product</h4>
+      <p>Embeds IBM Carbon tokens directly in the mode — square corners, IBM Blue, hairlines — then wires the UI to the API. No <code>design.md</code>, no hex codes.</p>
+      <div class="chips"><span class="chip">Carbon v11</span><span class="chip">context7</span></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ===== How to use ===== -->
+<div class="blk">
+  <h2 class="sec">How to use this guide — 4 moves per step</h2>
+  <p class="sub2">Every step card works the same way:</p>
+  <div class="cards4">
+    <div class="mcard"><h4>1 · Switch mode</h4><p>The colored tag tells you which Bob mode to pick.</p></div>
+    <div class="mcard"><h4>2 · Copy the prompt</h4><p>Press Copy.</p></div>
+    <div class="mcard"><h4>3 · Paste into Bob</h4><p>Enter. Watch Bob call its MCP tools.</p></div>
+    <div class="mcard"><h4>4 · Run the exit check</h4><p>Green = move on. Not green = read the yellow box.</p></div>
+  </div>
+  <div style="margin-top:14px;display:flex;flex-direction:column;gap:0">
+    <div class="note ok" style="margin:4px 0"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#24a148"/><path d="M4.5 8.2 7 10.5 11.5 5.5" stroke="#fff" stroke-width="1.6" fill="none"/></svg><span><b>Expected</b> — what good output looks like.</span></div>
+    <div class="note info" style="margin:4px 0"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#0043ce"/><rect x="7.2" y="7" width="1.6" height="5" fill="#fff"/><rect x="7.2" y="3.8" width="1.6" height="1.6" fill="#fff"/></svg><span><b>Exit check</b> — run this command to prove the step is done.</span></div>
+    <div class="note warn" style="margin:4px 0"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M8 1.5 15 14H1z" fill="#f1c21b"/><rect x="7.3" y="6" width="1.4" height="4.4" fill="#161616"/><rect x="7.3" y="11.3" width="1.4" height="1.4" fill="#161616"/></svg><span><b>If it fails</b> — the fix. Do not stay stuck.</span></div>
+  </div>
+</div>
+
+
+<!-- ===== SETUP ===== -->
+<section class="phase" id="setup">
+  <div class="phase-head">
+    <div class="phase-meta"><span class="kicker">Phase 0 · Pre-flight</span><span class="time">trainer only, before learners arrive</span></div>
+    <h3>Put the files in place</h3>
+    <p class="ps">Place these 3 files at the project root. <b>Every learner</b> pastes their OWN token into <code>.bob/mcp.json</code> (<code>GITHUB_PERSONAL_ACCESS_TOKEN</code>) — safe, because Prompt 1 ignores <code>.bob/</code> from git. Prompts 15–16 spend that token via the GitHub MCP.</p>
+    <div class="note err" style="margin:0"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#da1e28"/><path d="M5 5l6 6M11 5l-6 6" stroke="#fff" stroke-width="1.6"/></svg><span><b>Gate:</b> <code>ls .bob/mcp.json .bob/custom_modes.yaml requirement.md</code> must list 3 files — Carbon tokens live inside the Frontend mode, so no <code>design.md</code>. Never commit <code>.bob/</code> — it holds the token.</span></div>
+  </div>
+
+
+  <div class="grid2" style="margin-top:16px">
+    <div class="file-tile">
+      <div class="fh"><code>.bob/mcp.json</code><button class="cbtn" data-copy="f-mcp">⧉ Copy</button></div>
+      <pre class="code" id="f-mcp">{
+  "mcpServers": {
+    "context7": { "command": "npx", "args": ["-y", "@upstash/context7-mcp@latest"] },
+    "puppeteer": { "command": "npx", "args": ["-y", "@modelcontextprotocol/server-puppeteer"] },
+    "drawio": { "command": "npx", "args": ["-y", "@drawio/mcp"] },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": { "GITHUB_PERSONAL_ACCESS_TOKEN": "ghp_paste_your_token_here" }
+    }
+  }
+}</pre>
+    </div>
+    <div class="file-tile">
+      <div class="fh"><code>.bob/custom_modes.yaml</code><button class="cbtn" data-copy="f-modes">⧉ Copy</button></div>
+      <pre class="code" id="f-modes">customModes:
+  - slug: frontend
+    name: React Frontend Specialist
+    roleDefinition: |-
+      You are Bob, a Carbon Design System specialist focused on implementing Carbon React v11 components with proper accessibility and responsive design.
+
+      You work with all Carbon React libraries (Carbon v11 packages including @carbon/react, Carbon for IBM Products, Carbon Icons, Carbon Pictograms, Carbon Charts, and other Carbon React libraries).
+
+      You can implement designs from:
+      - User descriptions and requirements
+      - Design images and screenshots
+      - Detailed specifications
+
+      You excel at:
+      - Using Carbon MCP for documentation and code examples
+      - Implementing responsive Carbon components using the Carbon grid system
+      - Following Carbon design tokens for colors, spacing, and typography
+      - Ensuring accessibility compliance (ARIA, keyboard navigation, screen readers)
+      - Creating separate Grid components for each distinct logical content group
+      - Using official Carbon packages rather than recreating components
+      - ALWAYS prompting for browser validation after UI changes
+      - Connecting the UI cleanly to local backend SQLite API endpoints
+
+      ## Enterprise design tokens (built-in — no design.md required)
+
+      Apply these automatically without the user specifying CSS classes or hex codes.
+
+      ### Colors
+      - primary: #0f62fe — links, primary CTA, focus rings (single brand accent)
+      - on-primary: #ffffff · blue-hover: #0050e6 · blue-80 pressed: #002d9c · blue-60 link hover: #0043ce
+      - ink: #161616 · ink-muted: #525252 · ink-subtle: #8d8d8d
+      - canvas: #ffffff · surface-1: #f4f4f4 · surface-2: #e0e0e0
+      - hairline: #e0e0e0 (1px borders) · hairline-strong: #161616
+      - inverse-canvas: #161616 (footer) · inverse-ink: #ffffff · inverse-ink-muted: #c6c6c6
+      - success: #24a148 · warning: #f1c21b · error: #da1e28 · info: #0f62fe
+      - One chromatic accent only (IBM Blue). Status colors are the only exceptions.
+
+      ### Typography
+      - Font: IBM Plex Sans; fallback: Helvetica Neue, Arial, sans-serif
+      - Display 42–76px: weight 300, line-height 1.17–1.20 (never bold)
+      - Headline 32 / card-title 24 / subhead 20 / body-lg 18: weight 400
+      - Body 16: weight 400, line-height 1.50, letter-spacing 0.16px
+      - Body-sm / button / eyebrow 14: weight 400, letter-spacing 0.16px; emphasis weight 600
+      - Caption 12: letter-spacing 0.32px
+      - Eyebrows: sentence case — no all-caps tracking
+
+      ### Shapes &amp; elevation
+      - Border radius: STRICTLY 0px on every button, card, input, container
+      - Drop shadows: NONE — depth via 1px hairlines and surface shifts only
+      - Focus: 2px #0f62fe outline; inputs use a 2px blue bottom underline on focus
+      - No pill buttons
+
+      ### Spacing (4px grid)
+      - Tokens: 4 / 8 / 12 / 16 / 24 / 32 / 48 / 96
+      - Button padding 12×16 · input padding 11×16 · feature card 24 · large card/banner 32–48
+
+      ### Components
+      - button-primary: bg #0f62fe, text #fff, radius 0, padding 12×16 (pressed #002d9c)
+      - button-secondary: bg #161616, text #fff · tertiary/ghost: bg #fff, text #0f62fe (tertiary + 1px blue border) · danger: bg #da1e28, text #fff
+      - feature-card: bg #fff, border 1px #e0e0e0, padding 24, radius 0 (elevated band uses #f4f4f4)
+      - text-input: bg #f4f4f4, border 1px #e0e0e0, radius 0; focus 2px blue underline; error 2px #da1e28 underline
+      - tab default: muted + hairline; selected: weight 600 + 2px blue bottom underline
+      - footer: bg #161616, text #c6c6c6
+
+      ### Layout &amp; responsive
+      - Carbon 16-column grid → 8 → 4; max width ~1584px
+      - Breakpoints: 1312 / 1056 / 672 / 320 — card grids 4-up → 2-up → 1-up
+      - Minimum touch target 48px
+
+      ### Do
+      - 0px corners; light-weight display; blue only for links, primary CTA, focus
+      - letter-spacing 0.16px on body; hierarchy via hairlines/surface change, never shadows
+      - Separate Grid component per logical content group; official Carbon packages only
+      - Always prompt for browser validation after UI changes
+
+      ### Don't
+      - No rounded corners, bold display headlines, second brand color, shadows, pill buttons, or all-caps tracked eyebrows
+      - Do not recreate Carbon components when @carbon/react provides them
+    whenToUse: Use when building React UI, Carbon components, styling, accessibility, and connecting SQLite APIs.
+    description: Carbon React v11 specialist — embeds enterprise Carbon tokens (no design.md needed) and connects SQLite API.
+    groups: [read, edit, execute, mcp]</pre>
+    </div>
+  </div>
+
+
+  <div class="grid2" style="margin-top:16px">
+    <div class="file-tile">
+      <div class="fh"><code>requirement.md</code><button class="cbtn" data-copy="f-req">⧉ Copy</button></div>
+      <pre class="code" id="f-req"># Project: Smart IT Helpdesk Portal
+
+## 1. Objective
+ระบบบริหารจัดการแจ้งปัญหาไอทีภายในองค์กร สำหรับพนักงานและทีม IT Support
+
+## 2. Core Features (MVP)
+1. **Ticket Dashboard:** แสดงรายการปัญหา แบ่งตามสถานะ (New, In Progress, Resolved)
+2. **Real-time Search:** ค้นหาปัญหาตามชื่อหรือแผนก
+3. **Status Transition:** ปุ่มอัปเดตสถานะปัญหาตามลำดับ: New -&gt; In Progress -&gt; Resolved
+4. **Create Ticket Modal:** ฟอร์มแจ้งปัญหาใหม่ (หัวข้อ, แผนก, ความเร่งด่วน: Low, Medium, High)
+5. **Metric Cards:** สรุปตัวเลขสถิติตั๋วทั้งหมด และตั๋วแต่ละสถานะ
+
+## 3. Data Specification
+- id (INTEGER PRIMARY KEY AUTOINCREMENT)
+- title (TEXT NOT NULL)
+- department (TEXT NOT NULL: HR, Sales, Marketing, Dev)
+- priority (TEXT NOT NULL: Low, Medium, High)
+- status (TEXT NOT NULL: New, In Progress, Resolved)
+- created_at (TIMESTAMP DEFAULT CURRENT_TIMESTAMP)</pre>
+    </div>
+    <div class="file-tile" style="align-self:start">
+      <div class="fh"><code>No .env in v3</code></div>
+      <div style="padding:12px 14px"><div class="note info" style="margin:0"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#0043ce"/><rect x="7.2" y="7" width="1.6" height="5" fill="#fff"/><rect x="7.2" y="3.8" width="1.6" height="1.6" fill="#fff"/></svg><span>The token moved INTO <code>.bob/mcp.json</code> (<code>env</code> block above) — no <code>.env</code> to manage. <code>.bob/</code> never enters git, so the token can't leak.</span></div></div>
+    </div>
+  </div>
+
+
+  <div class="file-tile" style="margin-top:16px">
+      <div class="fh"><code>design.md</code><span class="tag blue">optional / legacy — tokens now live in Frontend mode</span></div>
+    <div style="padding:12px 14px"><div class="note info" style="margin:0"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#0043ce"/><rect x="7.2" y="7" width="1.6" height="5" fill="#fff"/><rect x="7.2" y="3.8" width="1.6" height="1.6" fill="#fff"/></svg><span>Carbon tokens are embedded in <code>.bob/custom_modes.yaml</code> → <b>React Frontend Specialist</b>. Workshop setup no longer needs this file — keep it only as a reference or drop it entirely.</span></div></div>
+  </div>
+</section>
+
+
+<!-- ===== PHASE 1 ===== -->
+<section class="phase" id="ph1">
+  <div class="phase-head">
+    <div class="phase-meta"><span class="kicker">Phase 1</span><span class="tag gray">Default mode</span></div>
+    <h3>Security &amp; Setup</h3>
+    <p class="ps">Lock secrets out of git. Wake up Bob's squad modes.</p>
+    <div class="note info" style="margin:0"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#0043ce"/><rect x="7.2" y="7" width="1.6" height="5" fill="#fff"/><rect x="7.2" y="3.8" width="1.6" height="1.6" fill="#fff"/></svg><span>No mode switch needed — stay in <b>Default</b>.</span></div>
+  </div>
+
+
+  <div class="step">
+    <div class="rail"><div class="num">1</div><div class="ln"></div></div>
+    <div class="sbody">
+      <div class="shead"><h4>Lock the door — .gitignore</h4><span class="tag gray">Default mode</span></div>
+      <div class="pcard">
+        <div class="pbar"><button class="cbtn" data-copy="p1-en">⧉ Copy</button></div>
+        <pre class="prompt show" id="p1-en">Create a .gitignore covering .bob/, .env, node_modules/, dist/, *.db, and screenshots/ to strictly prevent any credentials, tokens, or temporary files from leaking into git.</pre>
+      </div>
+      <div class="note ok"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#24a148"/><path d="M4.5 8.2 7 10.5 11.5 5.5" stroke="#fff" stroke-width="1.6" fill="none"/></svg><span><b>Expected:</b> <code>.gitignore</code> contains <code>.bob/</code>, <code>.env</code>, <code>node_modules/</code>, <code>dist/</code>, <code>*.db</code>, <code>screenshots/</code>. In VS Code Explorer, <code>.bob/</code> turns grey (ignored).</span></div>
+      <div class="note info"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#0043ce"/><rect x="7.2" y="7" width="1.6" height="5" fill="#fff"/><rect x="7.2" y="3.8" width="1.6" height="1.6" fill="#fff"/></svg><span><b>Exit check:</b> <code>cat .gitignore</code> · <b>If fail:</b> manually append the missing line, re-run.</span></div>
+    </div>
+  </div>
+
+
+  <div class="step">
+    <div class="rail"><div class="num">2</div><div class="ln"></div></div>
+    <div class="sbody">
+      <div class="shead"><h4>Squad Mode check</h4><span class="tag gray">Default mode</span></div>
+      <div class="pcard">
+        <div class="pbar"><button class="cbtn" data-copy="p2-en">⧉ Copy</button></div>
+        <pre class="prompt show" id="p2-en">Check .bob/custom_modes.yaml and requirement.md, and confirm whether we are ready to start system architecture planning.</pre>
+      </div>
+      <div class="note ok"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#24a148"/><path d="M4.5 8.2 7 10.5 11.5 5.5" stroke="#fff" stroke-width="1.6" fill="none"/></svg><span><b>Expected:</b> Bob confirms ready; the Mode menu shows <code>React Frontend Specialist</code>.</span></div>
+      <div class="note info"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#0043ce"/><rect x="7.2" y="7" width="1.6" height="5" fill="#fff"/><rect x="7.2" y="3.8" width="1.6" height="1.6" fill="#fff"/></svg><span><b>Exit check:</b> switch the Mode dropdown visually. <b>If fail:</b> reload Bob / verify YAML indent (2 spaces).</span></div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ===== PHASE 2 ===== -->
+<section class="phase" id="ph2">
+  <div class="phase-head">
+    <div class="phase-meta"><span class="kicker">Phase 2</span><span class="tag gray">Default Mode</span></div>
+    <h3>Planning &amp; Architecture</h3>
+    <p class="ps">Bob thinks before it codes: contracts, diagrams, database.</p>
+    <div class="note info" style="margin:0"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#0043ce"/><rect x="7.2" y="7" width="1.6" height="5" fill="#fff"/><rect x="7.2" y="3.8" width="1.6" height="1.6" fill="#fff"/></svg><span><b>Stay in Default Agent Mode.</b> Watch Bob call the <b>drawio</b> MCP tool and standard terminal CLI tools.</span></div>
+  </div>
+
+
+  <div class="step">
+    <div class="rail"><div class="num">3</div><div class="ln"></div></div>
+    <div class="sbody">
+      <div class="shead"><h4>API Contract</h4><span class="tag gray">Default Mode</span></div>
+      <div class="pcard">
+        <div class="pbar"><button class="cbtn" data-copy="p3-en">⧉ Copy</button></div>
+        <pre class="prompt show" id="p3-en">Read requirement.md, break it into short User Stories, and define the API Data Contract (endpoints for GET /api/tickets, POST /api/tickets, PATCH /api/tickets/:id). Save it as api-contract.json</pre>
+      </div>
+      <div class="note ok"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#24a148"/><path d="M4.5 8.2 7 10.5 11.5 5.5" stroke="#fff" stroke-width="1.6" fill="none"/></svg><span><b>Expected:</b> <code>api-contract.json</code> with stories + 3 endpoints.</span></div>
+      <div class="note info"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#0043ce"/><rect x="7.2" y="7" width="1.6" height="5" fill="#fff"/><rect x="7.2" y="3.8" width="1.6" height="1.6" fill="#fff"/></svg><span><b>Exit check:</b> <code>cat api-contract.json | head -40</code></span></div>
+    </div>
+  </div>
+
+
+  <div class="step">
+    <div class="rail"><div class="num">4</div><div class="ln"></div></div>
+    <div class="sbody">
+      <div class="shead"><h4>State Diagram + Wireframe</h4><span class="tag gray">Default Mode</span></div>
+      <div class="pcard">
+        <div class="pbar"><button class="cbtn" data-copy="p4-en">⧉ Copy</button></div>
+        <pre class="prompt show" id="p4-en">Use the drawio MCP to create a State Diagram of the Ticket lifecycle (New -&gt; In Progress -&gt; Resolved) plus a Dashboard Wireframe. Save as design-flow.drawio</pre>
+      </div>
+      <div class="note ok"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#24a148"/><path d="M4.5 8.2 7 10.5 11.5 5.5" stroke="#fff" stroke-width="1.6" fill="none"/></svg><span><b>Expected:</b> <code>design-flow.drawio</code> opens with 2 diagrams.</span></div>
+      <div class="note info"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#0043ce"/><rect x="7.2" y="7" width="1.6" height="5" fill="#fff"/><rect x="7.2" y="3.8" width="1.6" height="1.6" fill="#fff"/></svg><span><b>Exit check:</b> <code>ls -lh design-flow.drawio</code> · open in diagrams.net</span></div>
+      <div class="note warn"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M8 1.5 15 14H1z" fill="#f1c21b"/><rect x="7.3" y="6" width="1.4" height="4.4" fill="#161616"/><rect x="7.3" y="11.3" width="1.4" height="1.4" fill="#161616"/></svg><span><b>If it fails (Draw.io MCP flaky):</b> ask Bob to output raw <code>.drawio</code> XML and save manually — do not block this phase.</span></div>
+    </div>
+  </div>
+
+
+  <div class="step">
+    <div class="rail"><div class="num">5</div><div class="ln"></div></div>
+    <div class="sbody">
+      <div class="shead"><h4>SQLite + seed</h4><span class="tag gray">Default Mode</span></div>
+      <div class="pcard">
+        <div class="pbar"><button class="cbtn" data-copy="p5-en">⧉ Copy</button></div>
+        <pre class="prompt show" id="p5-en">Execute sqlite3 CLI commands directly to create the 'tickets' table in helpdesk.db matching requirement.md, seed 6 realistic IT-issue mock rows (representing Dev, HR, Sales, and Marketing departments with High/Medium/Low priority and New/In Progress/Resolved states), then query the counts by status and show them.</pre>
+      </div>
+      <div class="note ok"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#24a148"/><path d="M4.5 8.2 7 10.5 11.5 5.5" stroke="#fff" stroke-width="1.6" fill="none"/></svg><span><b>Expected:</b> <code>helpdesk.db</code> is created with 6 rows + status counts shown in chat.</span></div>
+      <div class="note info"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#0043ce"/><rect x="7.2" y="7" width="1.6" height="5" fill="#fff"/><rect x="7.2" y="3.8" width="1.6" height="1.6" fill="#fff"/></svg><span><b>Exit check:</b> <code>sqlite3 helpdesk.db "SELECT status, COUNT(*) FROM tickets GROUP BY status;"</code> → total 6.</span></div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ===== PHASE 3 ===== -->
+<section class="phase" id="ph3">
+  <div class="phase-head">
+    <div class="phase-meta"><span class="kicker">Phase 3</span><span class="tag purp">React Frontend Specialist</span></div>
+    <h3>Full-Stack Build</h3>
+    <p class="ps">Bob scaffolds the app, wires the API, and builds the UI.</p>
+    <div class="note info" style="margin:0"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#0043ce"/><rect x="7.2" y="7" width="1.6" height="5" fill="#fff"/><rect x="7.2" y="3.8" width="1.6" height="1.6" fill="#fff"/></svg><span><b>Switch Bob's mode → React Frontend Specialist.</b> Watch Bob call the <b>context7</b> MCP.</span></div>
+  </div>
+
+
+  <div class="step">
+    <div class="rail"><div class="num">6</div><div class="ln"></div></div>
+    <div class="sbody">
+      <div class="shead"><h4>Design system brief</h4><span class="tag purp">React Frontend Specialist</span></div>
+      <div class="pcard">
+        <div class="pbar"><button class="cbtn" data-copy="p6-en">⧉ Copy</button></div>
+        <pre class="prompt show" id="p6-en">Briefly summarize the mood &amp; tone and design highlights from the Enterprise design tokens embedded in your Frontend mode — what makes this brand distinctive?</pre>
+      </div>
+      <div class="note ok"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#24a148"/><path d="M4.5 8.2 7 10.5 11.5 5.5" stroke="#fff" stroke-width="1.6" fill="none"/></svg><span><b>Expected:</b> Bob briefs the room from tokens already in the mode (IBM Carbon, IBM Blue <code>#0f62fe</code>, 0px corners, no shadow) — no <code>design.md</code> read required.</span></div>
+    </div>
+  </div>
+
+
+  <div class="step">
+    <div class="rail"><div class="num">7</div><div class="ln"></div></div>
+    <div class="sbody">
+      <div class="shead"><h4>Scaffold</h4><span class="tag purp">React Frontend Specialist</span></div>
+      <div class="pcard">
+        <div class="pbar"><button class="cbtn" data-copy="p7-en">⧉ Copy</button></div>
+        <pre class="prompt show" id="p7-en">Scaffold a React project with Vite + Tailwind CSS (explicitly installing tailwindcss@^3.4.1, postcss@^8.4.31, and autoprefixer@^10.4.16 to guarantee compatibility and prevent Tailwind v4 crashes) in the helpdesk-app folder, and install lucide-react.</pre>
+      </div>
+      <div class="note info"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#0043ce"/><rect x="7.2" y="7" width="1.6" height="5" fill="#fff"/><rect x="7.2" y="3.8" width="1.6" height="1.6" fill="#fff"/></svg><span><b>Exit check:</b> <code>ls helpdesk-app/package.json helpdesk-app/vite.config.*</code> · <code>cat helpdesk-app/package.json | grep lucide</code></span></div>
+      <div class="note warn"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M8 1.5 15 14H1z" fill="#f1c21b"/><rect x="7.3" y="6" width="1.4" height="4.4" fill="#161616"/><rect x="7.3" y="11.3" width="1.4" height="1.4" fill="#161616"/></svg><span><b>If slow install:</b> use trainer USB <code>node_modules</code> or <code>npm ci</code>.</span></div>
+    </div>
+  </div>
+
+
+  <div class="step">
+    <div class="rail"><div class="num">8</div><div class="ln"></div></div>
+    <div class="sbody">
+      <div class="shead"><h4>API Bridge</h4><span class="tag purp">React Frontend Specialist</span></div>
+      <div class="pcard">
+        <div class="pbar"><button class="cbtn" data-copy="p8-en">⧉ Copy</button></div>
+        <pre class="prompt show" id="p8-en">Create a short server.js listening on port 5001 connecting helpdesk.db to the API (/api/tickets), add a "server" start script ("node server.js") to package.json, and configure vite.config to run on port 3000 and proxy /api requests to http://localhost:5001.</pre>
+      </div>
+      <div class="note info"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#0043ce"/><rect x="7.2" y="7" width="1.6" height="5" fill="#fff"/><rect x="7.2" y="3.8" width="1.6" height="1.6" fill="#fff"/></svg><span><b>Exit check:</b> <code>node helpdesk-app/server.js &amp;</code> then <code>curl -s localhost:5001/api/tickets | head -c 300</code> shows JSON.</span></div>
+    </div>
+  </div>
+
+
+  <div class="step">
+    <div class="rail"><div class="num">9</div><div class="ln"></div></div>
+    <div class="sbody">
+      <div class="shead"><h4>Dashboard to enterprise standard</h4><span class="tag purp">React Frontend Specialist</span></div>
+      <div class="pcard">
+        <div class="pbar"><button class="cbtn" data-copy="p9-en">⧉ Copy</button></div>
+        <pre class="prompt show" id="p9-en">Write the Helpdesk Dashboard page connected to /api/tickets, styling all UI and components per the Enterprise design tokens embedded in the Frontend mode.</pre>
+      </div>
+      <div class="note ok"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#24a148"/><path d="M4.5 8.2 7 10.5 11.5 5.5" stroke="#fff" stroke-width="1.6" fill="none"/></svg><span><b>Expected:</b> Bob converts the mode's embedded tokens into Tailwind classes (0px corners, <code>#0f62fe</code>, 1px hairlines) — Metric Cards, table, Modal. The browser at <code>localhost:3000</code> transforms into a Carbon dashboard live.</span></div>
+    </div>
+  </div>
+
+
+  <div class="step">
+    <div class="rail"><div class="num">9.5</div><div class="ln"></div></div>
+    <div class="sbody">
+      <div class="shead"><h4>Launch &amp; Verify Services</h4><span class="tag purp">React Frontend Specialist</span></div>
+      <div class="pcard">
+        <div class="pbar"><button class="cbtn" data-copy="p95-en">⧉ Copy</button></div>
+        <pre class="prompt show" id="p95-en">Run both the backend API server and frontend Vite dev server concurrently, then use a terminal command to open and check http://localhost:3000 in my default browser to verify that our connection bridge works.</pre>
+      </div>
+      <div class="note ok"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#24a148"/><path d="M4.5 8.2 7 10.5 11.5 5.5" stroke="#fff" stroke-width="1.6" fill="none"/></svg><span><b>Expected:</b> Both servers boot up. Bob executes a browser-open CLI command (<code>open http://localhost:3000</code> on macOS, <code>start http://localhost:3000</code> on Windows, or <code>xdg-open http://localhost:3000</code> on Linux), launching the template website cleanly.</span></div>
+      <div class="note info"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#0043ce"/><rect x="7.2" y="7" width="1.6" height="5" fill="#fff"/><rect x="7.2" y="3.8" width="1.6" height="1.6" fill="#fff"/></svg><span><b>Tip:</b> Leave the servers active, split-screen your browser and editor to view the real-time Carbon dashboard render live in the next step.</span></div>
+    </div>
+  </div>
+
+
+  <div class="step">
+    <div class="rail"><div class="num">10</div><div class="ln"></div></div>
+    <div class="sbody">
+      <div class="shead"><h4>Search + Build &amp; Open Application</h4><span class="tag purp">React Frontend Specialist</span></div>
+      <div class="pcard">
+        <div class="pbar"><button class="cbtn" data-copy="p10-en">⧉ Copy</button></div>
+        <pre class="prompt show" id="p10-en">Add the Search bar, run the API server and Vite dev server, then use a terminal command to open and check the running application in my default browser.</pre>
+      </div>
+      <div class="note ok"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#24a148"/><path d="M4.5 8.2 7 10.5 11.5 5.5" stroke="#fff" stroke-width="1.6" fill="none"/></svg><span><b>Expected:</b> Bob adds the Search bar and triggers a CLI browser launch (such as <code>open http://localhost:3000</code> on macOS, <code>start http://localhost:3000</code> on Windows, or <code>xdg-open http://localhost:3000</code> on Linux) to view the running dashboard in your default browser.</span></div>
+      <div class="note info"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#0043ce"/><rect x="7.2" y="7" width="1.6" height="5" fill="#fff"/><rect x="7.2" y="3.8" width="1.6" height="1.6" fill="#fff"/></svg><span><b>Exit check &amp; Build:</b> <code>npm run build --prefix helpdesk-app</code> passes without warnings + <code>ls helpdesk-app/dist/index.html</code> exists.</span></div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ===== PHASE 4 ===== -->
+<section class="phase" id="ph4">
+  <div class="phase-head">
+    <div class="phase-meta"><span class="kicker">Phase 4</span><span class="tag gray">Default Agent Mode</span></div>
+    <h3>QA &amp; Verify</h3>
+    <p class="ps">Bob drives a real browser, then proves the data really landed in SQLite.</p>
+    <div class="note info" style="margin:0"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#0043ce"/><rect x="7.2" y="7" width="1.6" height="5" fill="#fff"/><rect x="7.2" y="3.8" width="1.6" height="1.6" fill="#fff"/></svg><span><b>Switch Bob's mode → Default Agent Mode.</b> Watch Bob call the <b>puppeteer</b> MCP tool and standard terminal CLI tools.</span></div>
+  </div>
+
+
+  <div class="step">
+    <div class="rail"><div class="num">11</div><div class="ln"></div></div>
+    <div class="sbody">
+      <div class="shead"><h4>Visual check</h4><span class="tag gray">Default Agent Mode</span></div>
+      <div class="pcard">
+        <div class="pbar"><button class="cbtn" data-copy="p11-en">⧉ Copy</button></div>
+        <pre class="prompt show" id="p11-en">Run the API server (npm run server) and Vite dev server (npm run dev) in the background. Then use the puppeteer MCP to open the active Vite port (e.g. http://localhost:3000 or http://localhost:3001) and screenshot the Dashboard into the chat.</pre>
+      </div>
+      <div class="note info"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#0043ce"/><rect x="7.2" y="7" width="1.6" height="5" fill="#fff"/><rect x="7.2" y="3.8" width="1.6" height="1.6" fill="#fff"/></svg><span><b>Exit check:</b> screenshot visible in chat. Verify backend port 5001 is active: <code>curl -s localhost:5001/api/tickets | head -c 100</code> → status ok.</span></div>
+      <div class="note warn"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M8 1.5 15 14H1z" fill="#f1c21b"/><rect x="7.3" y="6" width="1.4" height="4.4" fill="#161616"/><rect x="7.3" y="11.3" width="1.4" height="1.4" fill="#161616"/></svg><span><b>If port busy:</b> <code>lsof -ti:3000,3001,5001 | xargs kill -9</code> then restart both servers.</span></div>
+    </div>
+  </div>
+
+
+  <div class="step">
+    <div class="rail"><div class="num">12</div><div class="ln"></div></div>
+    <div class="sbody">
+      <div class="shead"><h4>E2E test</h4><span class="tag gray">Default Agent Mode</span></div>
+      <div class="pcard">
+        <div class="pbar"><button class="cbtn" data-copy="p12-en">⧉ Copy</button></div>
+        <pre class="prompt show" id="p12-en">Use the puppeteer MCP to simulate usage with precise timing:
+1) Click the '+ แจ้งปัญหาใหม่' button using the dedicated selector `aside button` (avoid generic JS evaluations), then wait 1000ms.
+2) Fill the title input `form input` with 'Wireless mouse battery low'.
+3) Set the Department select `form select:nth-of-type(1)` to 'HR' and Priority select `form select:nth-of-type(2)` to 'High' (using direct select tools or dispatching Event('change') on elements), then wait 500ms.
+4) Submit by clicking `button[type="submit"]`, then wait 1000ms.
+5) Progress the newly created ticket to 'In Progress' by clicking the topmost row's 'เริ่มจัดการ' button using selector `table tbody tr:first-of-type button`, then wait 1000ms.
+6) Screenshot the final resulting Dashboard into the chat.</pre>
+      </div>
+      <div class="note info"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#0043ce"/><rect x="7.2" y="7" width="1.6" height="5" fill="#fff"/><rect x="7.2" y="3.8" width="1.6" height="1.6" fill="#fff"/></svg><span><b>Exit check:</b> <code>sqlite3 helpdesk.db "SELECT title,department,status FROM tickets WHERE title='Wireless mouse battery low';"</code> → HR / In Progress.</span></div>
+    </div>
+  </div>
+
+
+  <div class="step">
+    <div class="rail"><div class="num">13</div><div class="ln"></div></div>
+    <div class="sbody">
+      <div class="shead"><h4>Full-stack proof</h4><span class="tag gray">Default Agent Mode</span></div>
+      <div class="pcard">
+        <div class="pbar"><button class="cbtn" data-copy="p13-en">⧉ Copy</button></div>
+        <pre class="prompt show" id="p13-en">Use the sqlite3 CLI directly to SELECT the latest rows from the tickets table in helpdesk.db to prove the Puppeteer-created ticket was really persisted in SQLite.</pre>
+      </div>
+      <div class="note ok"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#24a148"/><path d="M4.5 8.2 7 10.5 11.5 5.5" stroke="#fff" stroke-width="1.6" fill="none"/></svg><span><b>Expected:</b> SQL table shows <code>Wireless mouse battery low</code> — full-stack proven.</span></div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ===== PHASE 5 ===== -->
+<section class="phase" id="ph5">
+  <div class="phase-head">
+    <div class="phase-meta"><span class="kicker">Phase 5</span><span class="tag gray">Default Agent Mode</span></div>
+    <h3>CI/CD &amp; Release</h3>
+    <p class="ps">Bob builds the pipeline, commits safely, creates your repo via GitHub MCP, and files the QA sign-off issue.</p>
+    <div class="note info" style="margin:0"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#0043ce"/><rect x="7.2" y="7" width="1.6" height="5" fill="#fff"/><rect x="7.2" y="3.8" width="1.6" height="1.6" fill="#fff"/></svg><span>Stay in <b>Default Agent Mode</b>. Nobody has a repo yet — Bob creates one per learner in Prompt 15.</span></div>
+  </div>
+
+
+  <div class="step">
+    <div class="rail"><div class="num">14</div><div class="ln"></div></div>
+    <div class="sbody">
+      <div class="shead"><h4>CI pipeline + safe local commit</h4><span class="tag gray">Default Agent Mode</span></div>
+      <div class="pcard">
+        <div class="pbar"><button class="cbtn" data-copy="p14-en">⧉ Copy</button></div>
+        <pre class="prompt show" id="p14-en">Create .github/workflows/ci.yml for automated builds, then check git status to ensure no .env or .bob/ is staged, and commit all code with message 'feat: full-stack helpdesk portal'.</pre>
+      </div>
+      <div class="note info"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#0043ce"/><rect x="7.2" y="7" width="1.6" height="5" fill="#fff"/><rect x="7.2" y="3.8" width="1.6" height="1.6" fill="#fff"/></svg><span><b>Exit check:</b> <code>cat .github/workflows/ci.yml</code> exists · <code>git log --oneline -1</code> shows the commit · <code>git status --short</code> shows no <code>.env</code> / <code>.bob/</code>. All local — no push yet.</span></div>
+    </div>
+  </div>
+
+
+  <div class="step">
+    <div class="rail"><div class="num">15</div><div class="ln"></div></div>
+    <div class="sbody">
+      <div class="shead"><h4>Create repo + push via MCP</h4><span class="tag gray">Default Agent Mode</span></div>
+      <div class="pcard">
+        <div class="pbar"><button class="cbtn" data-copy="p15-en">⧉ Copy</button></div>
+        <pre class="prompt show" id="p15-en">Use the github MCP to check or create a public repository named 'it-helpdesk-portal-[YOUR_NAME]' (replace [YOUR_NAME] with your nickname, e.g., it-helpdesk-portal-vai) under my authenticated account. Read the token from .bob/mcp.json, set the remote origin, and push branch main.</pre>
+      </div>
+      <div class="note ok"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#24a148"/><path d="M4.5 8.2 7 10.5 11.5 5.5" stroke="#fff" stroke-width="1.6" fill="none"/></svg><span><b>Expected:</b> Bob calls <code>mcp__github__create_repository</code> → links remote → pushes. Code lands at <code>github.com/&lt;you&gt;/it-helpdesk-portal</code> and Actions starts running by itself. The token comes from <code>mcp.json</code>, never from chat.</span></div>
+      <div class="note info"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#0043ce"/><rect x="7.2" y="7" width="1.6" height="5" fill="#fff"/><rect x="7.2" y="3.8" width="1.6" height="1.6" fill="#fff"/></svg><span><b>Exit check:</b> <code>git remote -v</code> shows the new <code>origin</code> on your own account.</span></div>
+      <div class="note warn"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M8 1.5 15 14H1z" fill="#f1c21b"/><rect x="7.3" y="6" width="1.4" height="4.4" fill="#161616"/><rect x="7.3" y="11.3" width="1.4" height="1.4" fill="#161616"/></svg><span><b>If it stalls, help in this order:</b> 1) name taken → give a suffix (<code>it-helpdesk-portal-01</code>) 2) Bob can't create → make it via the website or <code>gh repo create it-helpdesk-portal --public --source=. --push</code> 3) push asks for login → <code>gh auth login</code> first.</span></div>
+    </div>
+  </div>
+
+
+  <div class="step">
+    <div class="rail"><div class="num">16</div><div class="ln"></div></div>
+    <div class="sbody">
+      <div class="shead"><h4>Grand finale — QA certificate via GitHub MCP</h4><span class="tag gray">Default Agent Mode</span></div>
+      <div class="pcard">
+        <div class="pbar"><button class="cbtn" data-copy="p16-en">⧉ Copy</button></div>
+        <pre class="prompt show" id="p16-en">Using the github MCP, do these 2 things for me:
+1) Use a github MCP tool to create a new Issue on this repo titled 'QA &amp; E2E Testing Completed', stating the Helpdesk system has passed testing
+2) Use the github MCP to pull the latest commits on the repo to confirm the code was successfully released to the cloud</pre>
+      </div>
+      <div class="note ok"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#24a148"/><path d="M4.5 8.2 7 10.5 11.5 5.5" stroke="#fff" stroke-width="1.6" fill="none"/></svg><span><b>Expected:</b> Bob calls <code>mcp__github__create_issue</code> then <code>mcp__github__list_commits</code> — Issue #1 lands with labels <code>qa</code>, <code>e2e-testing</code>, <code>verified</code>, and the commits print in chat. Class dismissed with honors.</span></div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ===== TIPS ===== -->
+<div class="blk" id="tips">
+  <h2 class="sec">Trainer tips &amp; fallback</h2>
+  <p class="sub2">Read this before the room fills up.</p>
+  <ul class="tips">
+    <li><b>Token:</b> classic PAT with <code>repo</code>, <code>workflow</code>, <code>read:org</code>, <code>user</code> — pasted into <code>.bob/mcp.json</code>, one token per learner. After editing <code>mcp.json</code>, go Bob Settings → MCP → Refresh.</li>
+    <li><b>GitHub:</b> nobody has a repo — Bob creates <code>it-helpdesk-portal</code> per learner in Prompt 15. Personal GitHub = green Actions; GHE may queue.</li>
+    <li><b>Approval popups:</b> Prompts 15–16 trigger blue "Tools awaiting approval" boxes — click <b>Approve once</b> / <b>Approve for task</b>. This is Bob's human-in-the-loop safety, not an error.</li>
+    <li><b>Green finale:</b> open the repo's <b>Actions</b> tab — the <code>CI Pipeline</code> run goes green. End the class on that screen.</li>
+    <li><b>Flow:</b> click Mode → copy prompt → Enter. Keep moving; park questions.</li>
+    <li><b>Fallback kit:</b> pre-seeded <code>helpdesk.db</code> (6 rows), pre-built <code>dist/</code>, and a reference <code>design-flow.drawio</code> on USB.</li>
+    <li><b>Stretch:</b> early finishers add a department filter or a priority badge.</li>
+    <li><b>Standard:</b> Frontend mode carries the design tokens — nobody memorizes hex codes or carries a <code>design.md</code>. If a screen looks off-brand, re-paste Prompt 9.</li>
+  </ul>
+  <details class="acc">
+    <summary><span class="chev">▸</span> All verify commands (one block)</summary>
+    <div class="accbody"><pre class="code">cat .gitignore
+ls .bob/mcp.json .bob/custom_modes.yaml requirement.md
+cat api-contract.json | head -40
+ls -lh design-flow.drawio
+sqlite3 helpdesk.db "SELECT status, COUNT(*) FROM tickets GROUP BY status;"
+ls helpdesk-app/package.json
+curl -s localhost:3001/api/tickets | head -c 300
+npm run build --prefix helpdesk-app
+curl -s -o /dev/null -w "%{http_code}" localhost:5173
+sqlite3 helpdesk.db "SELECT title,department,status FROM tickets WHERE title='Wireless mouse battery low';"
+cat .github/workflows/ci.yml
+git status --short
+git log --oneline -1
+git remote -v</pre></div>
+  </details>
+</div>
+
+
+<div class="blk" id="takeaways">
+  <h2 class="sec">Takeaways — what learners walk away with</h2>
+  <p class="sub2">Say these out loud before closing the room.</p>
+  <div class="cards3">
+    <div class="mcard"><h4>Enterprise standardization</h4><p>Design tokens live inside the Custom Mode — everyone ships the same standard without typing color codes or shipping a design.md.</p></div>
+    <div class="mcard"><h4>True full-stack integration</h4><p>Data typed in the browser lands in a real SQLite database on disk — proven, not mocked.</p></div>
+    <div class="mcard teal"><h4>Autonomous AI agents</h4><p>Bob plays Architect, Coder, QA Tester, and Release Engineer — end to end in one session.</p></div>
+  </div>
+</div>
+
+
+</main>
+</div>
+
+
+<footer><div style="max-width:1280px;margin:0 auto;padding:0 32px">IBM Bob Workshop · Smart IT Helpdesk Portal · generated 2026-09-21</div></footer>
+
+
+<script>
+// Copy buttons (prompt cards + setup files)
+document.querySelectorAll('.cbtn').forEach(btn=>btn.addEventListener('click',async()=>{
+  const el=document.getElementById(btn.getAttribute('data-copy'));
+  if(!el)return;
+  const done=()=>{
+    const o=btn.textContent;
+    btn.textContent='Copied';
+    setTimeout(()=>{btn.textContent=o;},1200);
+  };
+  try{await navigator.clipboard.writeText(el.innerText);done();}
+  catch(e){
+    const r=document.createRange();r.selectNodeContents(el);
+    const s=getSelection();s.removeAllRanges();s.addRange(r);
+    document.execCommand('copy');s.removeAllRanges();done();
+  }
+}));
+// Side-nav scrollspy
+const links=[...document.querySelectorAll('.snav a.nl')];
+const secs=links.map(a=>document.querySelector(a.getAttribute('href'))).filter(Boolean);
+if('IntersectionObserver' in window){
+  const io=new IntersectionObserver(es=>{
+    es.forEach(en=>{
+      if(en.isIntersecting){
+        links.forEach(a=>a.classList.toggle('act',a.getAttribute('href')==='#'+en.target.id));
+      }
+    });
+  },{rootMargin:'-30% 0px -60% 0px'});
+  secs.forEach(s=>io.observe(s));
+}
+</script>
+</body>
+</html>
